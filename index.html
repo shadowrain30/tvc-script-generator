@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TVC Script Generator (Instant Team Single File)</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#0f1620; --border:#1c2633;
+      --text:#e6edf3; --muted:#9fb0c0; --muted2:#7f91a3;
+      --accent:#7dd3fc; --accent2:#a78bfa; --good:#34d399;
+      --warn:#fbbf24; --bad:#fb7185; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px; --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Thai", "Noto Sans", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text); background:
+        radial-gradient(800px 500px at 20% 10%, rgba(167,139,250,.18), transparent 60%),
+        radial-gradient(700px 500px at 80% 20%, rgba(125,211,252,.16), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    header{max-width:1200px;margin:0 auto;padding:18px 24px 0;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    h1{margin:0;font-size:18px;font-weight:800;letter-spacing:.2px}
+    header p{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
+    .pillrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .pill{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);padding:7px 10px;border-radius:999px;font-size:12px}
+    .pill strong{color:var(--text)}
+    .container{max-width:1200px;margin:0 auto;padding:24px;display:grid;grid-template-columns:380px 1fr;gap:18px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .hd{padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:10px;align-items:center;background:rgba(0,0,0,.12)}
+    .hd h2{margin:0;font-size:14px}
+    .bd{padding:14px}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,select,textarea{
+      width:100%;padding:10px 11px;border-radius:12px;border:1px solid var(--border);
+      background:rgba(0,0,0,.25);color:var(--text);outline:none;font-size:13px
+    }
+    textarea{min-height:80px;resize:vertical;line-height:1.4}
+    input:focus,select:focus,textarea:focus{border-color:rgba(125,211,252,.6)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{
+      border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);
+      padding:10px 12px;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;
+      transition:.15s transform ease,.15s border-color ease;
+    }
+    button:hover{transform:translateY(-1px);border-color:rgba(125,211,252,.35)}
+    button:active{transform:translateY(0)}
+    .primary{background:linear-gradient(135deg, rgba(125,211,252,.18), rgba(167,139,250,.16));border-color:rgba(125,211,252,.35)}
+    .ghost{background:rgba(0,0,0,.15)}
+    .danger{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.35)}
+    .success{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.35)}
+    .small{font-size:12px;padding:8px 10px;border-radius:11px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.35}
+    .mainGrid{display:grid;grid-template-rows:auto auto 1fr;gap:18px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+    .toolbar .left,.toolbar .right{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .dot{width:8px;height:8px;border-radius:999px;background:rgba(125,211,252,.55);box-shadow:0 0 0 3px rgba(125,211,252,.12)}
+    .dot.busy{background:rgba(251,191,36,.7);box-shadow:0 0 0 3px rgba(251,191,36,.12)}
+    .dot.err{background:rgba(251,113,133,.7);box-shadow:0 0 0 3px rgba(251,113,133,.12)}
+    .dot.ok{background:rgba(52,211,153,.7);box-shadow:0 0 0 3px rgba(52,211,153,.12)}
+    .editorWrap{display:grid;grid-template-columns:1.35fr .65fr;gap:14px}
+    .scriptBox{border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.18);overflow:hidden;display:flex;flex-direction:column;min-height:380px}
+    .scriptTop{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.15)}
+    .scriptTop .hint{font-size:12px;color:var(--muted)}
+    .scriptArea{padding:12px;font-family:var(--mono);font-size:12.6px;line-height:1.55;white-space:pre-wrap;word-break:break-word;outline:none;flex:1}
+    .scriptArea[contenteditable="true"]:focus{box-shadow:inset 0 0 0 2px rgba(125,211,252,.25);border-radius:10px}
+    .sidePanel{display:flex;flex-direction:column;gap:14px}
+    .commentList,.history{display:flex;flex-direction:column;gap:10px;max-height:230px;overflow:auto;padding-right:6px}
+    .cItem,.hItem{border:1px solid var(--border);border-radius:12px;padding:10px;background:rgba(255,255,255,.03)}
+    .cMeta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted2);margin-bottom:6px}
+    .cText{font-size:12px;line-height:1.35}
+    .hItem{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .hItem .meta{display:flex;flex-direction:column;gap:3px}
+    .hItem .meta .t{font-size:12px;font-weight:800}
+    .hItem .meta .s{font-size:11px;color:var(--muted2)}
+    .reviewBox{border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.18);padding:12px;min-height:150px;white-space:pre-wrap;word-break:break-word;font-size:12.5px;line-height:1.45}
+    .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+      background:rgba(15,22,32,.95);border:1px solid var(--border);color:var(--text);
+      padding:10px 12px;border-radius:999px;box-shadow:var(--shadow);font-size:12px;
+      opacity:0;pointer-events:none;transition:.18s opacity ease,.18s transform ease}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-2px)}
+    .kbd{font-family:var(--mono);border:1px solid var(--border);border-bottom-width:2px;background:rgba(0,0,0,.25);
+      border-radius:9px;padding:2px 6px;font-size:11px;color:var(--muted)}
+    @media (max-width:980px){.container{grid-template-columns:1fr}.editorWrap{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🎬 TVC Script Generator (Instant Team)</h1>
+    <p>ใช้ได้ทันทีแบบไม่ต้องคอนฟิก: มี <span class="kbd">Offline Mock AI</span> ให้กด Generate/Review ได้เลย แล้วค่อยเสียบ backend ทีหลัง</p>
+  </div>
+  <div class="pillrow">
+    <div class="pill"><strong>Offline AI</strong> ready</div>
+    <div class="pill">Single-file</div>
+    <div class="pill">Dark UI</div>
+    <div class="pill">Fetch-ready</div>
+  </div>
+</header>
+
+<div class="container">
+  <!-- LEFT -->
+  <section class="card">
+    <div class="hd">
+      <h2>1) Input Form</h2>
+      <span class="pill">Platform affects style</span>
+    </div>
+    <div class="bd">
+      <label>Platform</label>
+      <select id="platform">
+        <option value="YouTube">YouTube</option>
+        <option value="TikTok">TikTok</option>
+        <option value="TV">TV</option>
+      </select>
+
+      <label>Client / Brand</label>
+      <input id="brand" placeholder="เช่น Nissan / TRUE / BMW" />
+
+      <label>Concept / Message</label>
+      <textarea id="concept" placeholder="สรุปไอเดียหลัก + โครงเรื่องสั้นๆ"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Tone / Style</label>
+          <select id="tone">
+            <option value="serious">serious</option>
+            <option value="funny">funny</option>
+            <option value="emotional">emotional</option>
+            <option value="inspirational">inspirational</option>
+          </select>
+        </div>
+        <div>
+          <label>Duration</label>
+          <select id="duration">
+            <option value="15s">15s</option>
+            <option value="30s" selected>30s</option>
+            <option value="60s">60s</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Target Audience</label>
+      <input id="audience" placeholder="เช่น วัยทำงาน 25-40 / Gen Z / ครอบครัว" />
+
+      <label>Key Message / CTA</label>
+      <input id="cta" placeholder="เช่น นัดทดลองขับ / สมัครเลย / ซื้อผ่านแอป" />
+
+      <label>Additional Notes</label>
+      <textarea id="notes" placeholder="ข้อจำกัดแบรนด์, ห้ามพูดอะไร, mood & tone ฯลฯ"></textarea>
+
+      <div class="btnrow">
+        <button class="primary" id="btnGenerate">Generate Script</button>
+        <button class="ghost" id="btnSaveVersion">Save Version</button>
+        <button class="danger" id="btnReset">Reset</button>
+      </div>
+
+      <div class="card" style="margin-top:14px; box-shadow:none;">
+        <div class="hd">
+          <h2>AI Connection (optional)</h2>
+          <span class="pill">no key here</span>
+        </div>
+        <div class="bd">
+          <label><input type="checkbox" id="useMock" checked /> ใช้ Offline Mock AI (แนะนำถ้ายังไม่มี backend)</label>
+          <label>Generate endpoint (ถ้ามี backend)</label>
+          <input id="epGenerate" placeholder="เช่น https://yourdomain.com/api/generate-script" />
+          <label>Review endpoint (ถ้ามี backend)</label>
+          <input id="epReview" placeholder="เช่น https://yourdomain.com/api/review-script" />
+          <div class="muted" style="margin-top:10px">
+            อย่าใส่ API Key ในไฟล์นี้. ถ้าทีมอยากให้ปลอดภัย ให้เก็บ key ใน backend (env var) เท่านั้น
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <section class="mainGrid">
+    <section class="card">
+      <div class="hd">
+        <h2>2) Script Generation + Tools</h2>
+        <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Ready</span></div>
+      </div>
+      <div class="bd">
+        <div class="toolbar">
+          <div class="left">
+            <button class="small ghost" id="btnCopySelection">Copy selected</button>
+            <button class="small ghost" id="btnCopyAll">Copy all</button>
+            <button class="small ghost" id="btnDownloadTxt">Download .txt</button>
+            <button class="small ghost" id="btnShareLink">Share link</button>
+          </div>
+          <div class="right">
+            <button class="small" id="btnAddComment">Add inline comment</button>
+            <button class="small primary" id="btnApplyRegenerate">Apply Changes & Regenerate</button>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:10px">
+          Format: <span class="kbd">[TIME] Visual Description / Audio/Dialogue</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="hd">
+        <h2>4) Edit & Comment + Version History</h2>
+        <span class="pill">localStorage</span>
+      </div>
+      <div class="bd">
+        <div class="editorWrap">
+          <div class="scriptBox">
+            <div class="scriptTop">
+              <div class="hint">Script output (แก้ได้)</div>
+              <div class="hint">เลือกข้อความแล้วกด <span class="kbd">Add inline comment</span></div>
+            </div>
+            <div id="scriptArea" class="scriptArea" contenteditable="true" spellcheck="false"></div>
+          </div>
+
+          <div class="sidePanel">
+            <div class="card" style="box-shadow:none;">
+              <div class="hd">
+                <h2>Comments</h2>
+                <button class="small ghost" id="btnClearComments">Clear</button>
+              </div>
+              <div class="bd">
+                <div class="commentList" id="commentList"></div>
+                <div class="muted" style="margin-top:10px">
+                  คอมเมนต์เป็น snapshot ของข้อความที่เลือก (แก้หนักๆ แล้วอาจคลาดได้บ้าง เพราะนี่ไม่ใช่ Google Docs)
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="hd">
+                <h2>Version history</h2>
+                <button class="small ghost" id="btnClearHistory">Clear</button>
+              </div>
+              <div class="bd">
+                <div class="history" id="historyList"></div>
+                <div class="muted" style="margin-top:10px">
+                  ถ้าต้องการให้ทีมแชร์เวอร์ชันร่วมกันจริง ต้องมี backend เก็บกลาง
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="hd">
+        <h2>3) Client Review Section</h2>
+        <div class="btnrow" style="margin:0">
+          <button class="small primary" id="btnClientEyes">Cross-Check with Client Eyes</button>
+          <button class="small success" id="btnLooksGood">Looks Good</button>
+          <button class="small" id="btnEditAgain">Edit Again</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div id="reviewBox" class="reviewBox">ยังไม่มีรีวิว กด “Cross-Check with Client Eyes” ได้เลย</div>
+      </div>
+    </section>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   Instant TVC Script Generator
+   - Works immediately with Offline Mock AI (no config)
+   - Optional: connect to your backend via fetch endpoints
+   - IMPORTANT: do NOT put API keys in frontend
+========================================================= */
+
+const LS_KEY = "tvc_instant_state_v1";
+const LS_KEY_HISTORY = "tvc_instant_history_v1";
+const LS_KEY_COMMENTS = "tvc_instant_comments_v1";
+
+const $ = (id) => document.getElementById(id);
+
+const platform = $("platform");
+const brand = $("brand");
+const concept = $("concept");
+const tone = $("tone");
+const duration = $("duration");
+const audience = $("audience");
+const cta = $("cta");
+const notes = $("notes");
+
+const useMock = $("useMock");
+const epGenerate = $("epGenerate");
+const epReview = $("epReview");
+
+const btnGenerate = $("btnGenerate");
+const btnClientEyes = $("btnClientEyes");
+const btnLooksGood = $("btnLooksGood");
+const btnEditAgain = $("btnEditAgain");
+
+const btnCopySelection = $("btnCopySelection");
+const btnCopyAll = $("btnCopyAll");
+const btnDownloadTxt = $("btnDownloadTxt");
+const btnShareLink = $("btnShareLink");
+
+const btnAddComment = $("btnAddComment");
+const btnApplyRegenerate = $("btnApplyRegenerate");
+const btnSaveVersion = $("btnSaveVersion");
+const btnReset = $("btnReset");
+
+const btnClearHistory = $("btnClearHistory");
+const btnClearComments = $("btnClearComments");
+
+const scriptArea = $("scriptArea");
+const reviewBox = $("reviewBox");
+const historyList = $("historyList");
+const commentList = $("commentList");
+
+const statusDot = $("statusDot");
+const statusText = $("statusText");
+const toast = $("toast");
+
+function nowLabel(){
+  const d = new Date();
+  const pad = (n)=> String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function setStatus(state, text){
+  statusDot.classList.remove("busy","err","ok");
+  if(state==="busy") statusDot.classList.add("busy");
+  if(state==="err") statusDot.classList.add("err");
+  if(state==="ok") statusDot.classList.add("ok");
+  statusText.textContent = text || "Ready";
+}
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(()=> toast.classList.remove("show"), 1600);
+}
+function safeJsonParse(str, fallback){
+  try{ return JSON.parse(str); } catch { return fallback; }
+}
+function encodeState(obj){
+  const json = JSON.stringify(obj);
+  return btoa(unescape(encodeURIComponent(json)));
+}
+function decodeState(b64){
+  const json = decodeURIComponent(escape(atob(b64)));
+  return JSON.parse(json);
+}
+function platformGuidance(p){
+  if(p==="TikTok") return "Vertical-first, hook in first 1-2s, punchy lines, on-screen text cues";
+  if(p==="YouTube") return "Stronger arc, natural VO rhythm, clear setup-payoff, CTA near end";
+  return "Broadcast-safe, clean language, clear visuals, strong brand mnemonic";
+}
+function defaultTemplate(){
+  return [
+    "[00:00-00:02] (Hook) / (Audio: ...)",
+    "[00:02-00:06] (Setup) / (Audio: ...)",
+    "[00:06-00:12] (Problem/Tension) / (Audio: ...)",
+    "[00:12-00:24] (Solution/Product moment) / (Audio: ...)",
+    "[00:24-00:30] (Brand + CTA) / (Audio: ...)"
+  ].join("\n");
+}
+
+function buildInput(){
+  const input = {
+    platform: platform.value,
+    brand: brand.value.trim(),
+    concept: concept.value.trim(),
+    tone: tone.value,
+    duration: duration.value,
+    audience: audience.value.trim(),
+    cta: cta.value.trim(),
+    notes: notes.value.trim()
+  };
+  const missing = [];
+  if(!input.brand) missing.push("Client/Brand");
+  if(!input.concept) missing.push("Concept/Message");
+  if(!input.audience) missing.push("Target audience");
+  if(!input.cta) missing.push("Key message/CTA");
+  return {input, missing};
+}
+
+/* ---------------------------
+   Offline Mock AI (instant)
+   - ไม่ฉลาดเท่าโมเดลจริง
+   - แต่ทำให้ทีมกดเล่น flow ได้ทันที
+----------------------------*/
+function mockGenerate({input}){
+  // Time mapping based on duration
+  const map = {
+    "15s": [
+      ["00:00-00:02","Hook"],
+      ["00:02-00:06","Setup"],
+      ["00:06-00:12","Payoff/Product"],
+      ["00:12-00:15","Brand+CTA"]
+    ],
+    "30s": [
+      ["00:00-00:02","Hook"],
+      ["00:02-00:07","Setup"],
+      ["00:07-00:14","Problem/Tension"],
+      ["00:14-00:24","Solution/Product"],
+      ["00:24-00:30","Brand+CTA"]
+    ],
+    "60s": [
+      ["00:00-00:03","Hook"],
+      ["00:03-00:12","Setup"],
+      ["00:12-00:28","Problem/Tension"],
+      ["00:28-00:48","Solution/Product"],
+      ["00:48-00:60","Brand+CTA"]
+    ]
+  }[input.duration] || map["30s"];
+
+  const toneHint = {
+    serious:"ชัด ตรง มีน้ำหนัก",
+    funny:"จังหวะไว มีมุกเบาๆ ที่ไม่ cringe",
+    emotional:"อบอุ่น เล่าแบบชวนอิน",
+    inspirational:"พลังบวก แบบไม่ขายฝันเกินจริง"
+  }[input.tone];
+
+  const v = [];
+  v.push(`[${map[0][0]}] Visual: เปิดด้วยภาพที่ “หยุดสายตา” ให้เข้ากับ ${input.platform} / Audio: (Hook) ประโยคสั้นๆ ตรงปม. โทน: ${toneHint}`);
+  v.push(`[${map[1][0]}] Visual: แนะนำบริบท/ตัวละครให้ ${input.audience} รู้สึก “นี่มันฉัน” / Audio: เล่าประเด็น "${input.concept}" แบบเข้าใจใน 1 ลมหายใจ`);
+  if(map.length>4){
+    v.push(`[${map[2][0]}] Visual: ให้เห็นปัญหาหรือแรงเสียดทานจริงในชีวิต / Audio: ตอกย้ำ pain point แบบไม่ดราม่าเกิน`);
+    v.push(`[${map[3][0]}] Visual: Moment ที่แบรนด์ ${input.brand} เข้ามา “แก้เกม” / Audio: พูด benefit ชัดๆ + ภาพพิสูจน์`);
+    v.push(`[${map[4][0]}] Visual: โลโก้/แพ็กช็อต + คำจำง่าย / Audio: CTA: "${input.cta}"`);
+  }else{
+    v.push(`[${map[2][0]}] Visual: โชว์จุดเด่นของ ${input.brand} แบบเห็นภาพ / Audio: สรุป benefit + พาไป CTA`);
+    v.push(`[${map[3][0]}] Visual: โลโก้/แพ็กช็อต / Audio: CTA: "${input.cta}"`);
+  }
+  if(input.notes){
+    v.push(`\n(Notes จากบรีฟ): ${input.notes}`);
+  }
+  v.push(`\n[Style guidance] ${platformGuidance(input.platform)}`);
+  return v.join("\n");
+}
+
+function mockReview(scriptText, input){
+  const verdict = scriptText.includes(input.cta) ? "Looks good (สำหรับเดโม่)" : "Needs edits (CTA ยังไม่เด่น)";
+  return [
+    `Overall verdict: ${verdict}`,
+    ``,
+    `Top strengths:`,
+    `- โครงสร้างครบ: Hook → Setup → Solution → CTA`,
+    `- โทน ${input.tone} ไปในทางเดียวกัน`,
+    `- มีภาพ/เสียงแยกชัดเจน`,
+    ``,
+    `Biggest issues:`,
+    `- อาจยัง “ทั่วไป” ไป ถ้ายังไม่ใส่ detail เฉพาะแบรนด์`,
+    `- CTA ต้องเด่นและออกเสียงง่าย`,
+    `- ถ้าเป็น TikTok ต้องเร่ง hook ให้แหลมขึ้น`,
+    ``,
+    `Suggested edits:`,
+    `- ใส่ key benefit ที่เฉพาะของ ${input.brand} ให้ชัด 1-2 จุด`,
+    `- ทำประโยค hook ให้สั้นลงอีก 20%`,
+    `- เพิ่ม visual proof 1 ช็อต (ก่อน-หลัง/สถานการณ์จริง)`,
+    `- ปรับคำ CTA ให้ “ทำทันที” มากขึ้น`,
+    `- ตรวจคำต้องห้าม/คำที่ต้องพูดตามบรีฟ`,
+    ``,
+    `One-line improved CTA: "${input.cta}"`
+  ].join("\n");
+}
+
+/* ---------------------------
+   Backend calling (optional)
+----------------------------*/
+async function callAI(endpoint, bodyObj){
+  const res = await fetch(endpoint, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(bodyObj)
+  });
+  if(!res.ok){
+    const t = await res.text().catch(()=> "");
+    throw new Error(`HTTP ${res.status} ${res.statusText} ${t}`.trim());
+  }
+  return await res.json();
+}
+
+/* ---------------------------
+   History / Comments
+----------------------------*/
+function loadHistory(){ return safeJsonParse(localStorage.getItem(LS_KEY_HISTORY), []); }
+function saveHistory(list){ localStorage.setItem(LS_KEY_HISTORY, JSON.stringify(list)); renderHistory(); }
+function pushHistory(label, scriptText, reviewText){
+  const list = loadHistory();
+  list.unshift({ id: crypto.randomUUID(), at: nowLabel(), label, script: scriptText||"", review: reviewText||"" });
+  while(list.length>30) list.pop();
+  saveHistory(list);
+}
+
+function loadComments(){ return safeJsonParse(localStorage.getItem(LS_KEY_COMMENTS), []); }
+function saveComments(list){ localStorage.setItem(LS_KEY_COMMENTS, JSON.stringify(list)); renderComments(); }
+
+function getSelectionTextInEditor(){
+  const sel = window.getSelection();
+  if(!sel || sel.rangeCount===0) return "";
+  const range = sel.getRangeAt(0);
+  if(!scriptArea.contains(range.commonAncestorContainer)) return "";
+  return sel.toString();
+}
+
+function escapeHtml(s){
+  return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+function renderHistory(){
+  const list = loadHistory();
+  historyList.innerHTML = "";
+  if(!list.length){ historyList.innerHTML = `<div class="muted">ยังไม่มีเวอร์ชัน</div>`; return; }
+  list.forEach((item, idx)=>{
+    const el = document.createElement("div");
+    el.className = "hItem";
+    el.innerHTML = `
+      <div class="meta">
+        <div class="t">${escapeHtml(item.label)} <span style="color:var(--muted2)">#${list.length-idx}</span></div>
+        <div class="s">${escapeHtml(item.at)}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="small ghost" data-act="load" data-id="${item.id}">Load</button>
+        <button class="small danger" data-act="del" data-id="${item.id}">Del</button>
+      </div>
+    `;
+    historyList.appendChild(el);
+  });
+}
+function renderComments(){
+  const list = loadComments();
+  commentList.innerHTML = "";
+  if(!list.length){ commentList.innerHTML = `<div class="muted">ยังไม่มีคอมเมนต์</div>`; return; }
+  list.forEach(c=>{
+    const el = document.createElement("div");
+    el.className = "cItem";
+    el.innerHTML = `
+      <div class="cMeta">
+        <span>${escapeHtml(c.at)}</span>
+        <span style="display:flex;gap:8px;align-items:center;">
+          <span class="kbd">${escapeHtml(c.kind)}</span>
+          <button class="small danger" data-act="cDel" data-id="${c.id}">Del</button>
+        </span>
+      </div>
+      <div class="cText"><strong>Selected:</strong> ${escapeHtml(c.selected)}</div>
+      <div class="cText" style="margin-top:6px"><strong>Comment:</strong> ${escapeHtml(c.comment)}</div>
+    `;
+    commentList.appendChild(el);
+  });
+}
+
+function saveState(){
+  const obj = {
+    platform: platform.value, brand: brand.value, concept: concept.value,
+    tone: tone.value, duration: duration.value, audience: audience.value,
+    cta: cta.value, notes: notes.value,
+    script: scriptArea.innerText, review: reviewBox.innerText,
+    useMock: useMock.checked, epGenerate: epGenerate.value, epReview: epReview.value
+  };
+  localStorage.setItem(LS_KEY, JSON.stringify(obj));
+}
+function loadState(){
+  const obj = safeJsonParse(localStorage.getItem(LS_KEY), null);
+  if(!obj) return;
+  platform.value = obj.platform || "YouTube";
+  brand.value = obj.brand || "";
+  concept.value = obj.concept || "";
+  tone.value = obj.tone || "serious";
+  duration.value = obj.duration || "30s";
+  audience.value = obj.audience || "";
+  cta.value = obj.cta || "";
+  notes.value = obj.notes || "";
+  scriptArea.innerText = obj.script || "";
+  reviewBox.innerText = obj.review || "ยังไม่มีรีวิว กด “Cross-Check with Client Eyes” ได้เลย";
+  useMock.checked = obj.useMock !== false;
+  epGenerate.value = obj.epGenerate || "";
+  epReview.value = obj.epReview || "";
+}
+
+function makeShareLink(){
+  const state = {
+    platform: platform.value, brand: brand.value, concept: concept.value,
+    tone: tone.value, duration: duration.value, audience: audience.value,
+    cta: cta.value, notes: notes.value,
+    script: scriptArea.innerText, review: reviewBox.innerText
+  };
+  const encoded = encodeState(state);
+  return `${location.origin}${location.pathname}#share=${encoded}`;
+}
+function loadShareFromHash(){
+  const hash = location.hash || "";
+  if(!hash.startsWith("#share=")) return false;
+  const b64 = hash.slice("#share=".length);
+  try{
+    const s = decodeState(b64);
+    platform.value = s.platform || "YouTube";
+    brand.value = s.brand || "";
+    concept.value = s.concept || "";
+    tone.value = s.tone || "serious";
+    duration.value = s.duration || "30s";
+    audience.value = s.audience || "";
+    cta.value = s.cta || "";
+    notes.value = s.notes || "";
+    scriptArea.innerText = s.script || "";
+    reviewBox.innerText = s.review || "ยังไม่มีรีวิว กด “Cross-Check with Client Eyes” ได้เลย";
+    showToast("Loaded from share link");
+    saveState();
+    return true;
+  }catch(e){
+    setStatus("err","Share decode failed");
+    return false;
+  }
+}
+
+function downloadTxt(filename, text){
+  const blob = new Blob([text], { type:"text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+async function copyToClipboard(text){
+  await navigator.clipboard.writeText(text);
+}
+
+/* ---------------------------
+   Main actions
+----------------------------*/
+async function generateScript(extraInstruction=""){
+  const {input, missing} = buildInput();
+  if(missing.length){
+    setStatus("err","Missing inputs");
+    showToast("กรอกให้ครบ: " + missing.join(", "));
+    return;
+  }
+  if(scriptArea.innerText.trim()){
+    pushHistory("Auto-save before generate", scriptArea.innerText, reviewBox.innerText);
+  }
+  reviewBox.innerText = "ยังไม่มีรีวิว กด “Cross-Check with Client Eyes” ได้เลย";
+
+  setStatus("busy","Generating…");
+
+  try{
+    if(useMock.checked){
+      const text = mockGenerate({input}) + (extraInstruction ? `\n\n(Extra instruction): ${extraInstruction}` : "");
+      scriptArea.innerText = text.trim();
+      setStatus("ok","Generated (Mock)");
+      showToast("Generated (offline mock)");
+      saveState();
+      return;
+    }
+
+    const genEp = epGenerate.value.trim();
+    if(!genEp) throw new Error("No generate endpoint set");
+
+    const prompt = `
+Write a ${input.duration} script for ${input.platform}.
+Output natural text (NOT table). Each line: [TIME] Visual / Audio.
+Brand: ${input.brand}
+Concept: ${input.concept}
+Tone: ${input.tone}
+Audience: ${input.audience}
+CTA: ${input.cta}
+Platform style: ${platformGuidance(input.platform)}
+Notes: ${input.notes || "None"}
+Extra: ${extraInstruction || "None"}
+`.trim();
+
+    const data = await callAI(genEp, { prompt, input, mode:"generate_script" });
+    const text = data.text || (data.result && data.result.text) || "";
+    if(!text.trim()) throw new Error("No text returned");
+    scriptArea.innerText = text.trim();
+    setStatus("ok","Generated");
+    showToast("Generated (backend)");
+    saveState();
+  }catch(e){
+    console.error(e);
+    setStatus("err","Generate failed");
+    showToast("Generate failed (เช็ค endpoint/เซิร์ฟเวอร์)");
+  }
+}
+
+async function reviewClientEyes(){
+  const {input} = buildInput();
+  const scriptText = scriptArea.innerText.trim();
+  if(!scriptText){
+    showToast("ยังไม่มีสคริปต์ให้รีวิว");
+    return;
+  }
+  setStatus("busy","Reviewing…");
+
+  try{
+    if(useMock.checked){
+      reviewBox.innerText = mockReview(scriptText, input);
+      setStatus("ok","Reviewed (Mock)");
+      showToast("Reviewed (offline mock)");
+      saveState();
+      return;
+    }
+
+    const revEp = epReview.value.trim();
+    if(!revEp) throw new Error("No review endpoint set");
+
+    const prompt = `
+Review as client eyes.
+Focus: clarity, message clarity, brand alignment, platform fit, risks.
+Return plain text.
+Brand: ${input.brand}
+Platform: ${input.platform}
+Tone: ${input.tone}
+Duration: ${input.duration}
+CTA: ${input.cta}
+
+SCRIPT:
+<<<
+${scriptText}
+>>>
+`.trim();
+
+    const data = await callAI(revEp, { prompt, meta: input, mode:"review_client_eyes" });
+    const text = data.text || (data.result && data.result.text) || "";
+    if(!text.trim()) throw new Error("No review returned");
+    reviewBox.innerText = text.trim();
+    setStatus("ok","Reviewed");
+    showToast("Reviewed (backend)");
+    saveState();
+  }catch(e){
+    console.error(e);
+    setStatus("err","Review failed");
+    showToast("Review failed (เช็ค endpoint/เซิร์ฟเวอร์)");
+  }
+}
+
+function addInlineComment(){
+  const selected = getSelectionTextInEditor().trim();
+  if(!selected){ showToast("เลือกข้อความก่อน"); return; }
+  const comment = prompt("ใส่คอมเมนต์/ข้อเสนอแนะสำหรับช่วงที่เลือก:");
+  if(comment === null) return;
+  if(!comment.trim()){ showToast("คอมเมนต์ว่าง"); return; }
+  const list = loadComments();
+  list.unshift({
+    id: crypto.randomUUID(),
+    at: nowLabel(),
+    kind: "inline",
+    selected: selected.slice(0,280),
+    comment: comment.trim().slice(0,600)
+  });
+  while(list.length>50) list.pop();
+  saveComments(list);
+  showToast("Comment added");
+}
+
+async function applyChangesAndRegenerate(){
+  const scriptText = scriptArea.innerText.trim();
+  if(!scriptText){ showToast("ยังไม่มีสคริปต์"); return; }
+  pushHistory("Before apply & regenerate", scriptArea.innerText, reviewBox.innerText);
+
+  const comments = loadComments();
+  const commentText = comments.length
+    ? comments.map((c,i)=>`(${i+1}) "${c.selected}" => ${c.comment}`).join("\n")
+    : "No comments";
+
+  // For mock mode: do a basic rewrite by appending suggestions (keeps it instant)
+  if(useMock.checked){
+    scriptArea.innerText = scriptText + "\n\n[Applied Suggestions]\n" + commentText;
+    setStatus("ok","Updated (Mock)");
+    showToast("Applied (offline mock)");
+    saveState();
+    return;
+  }
+
+  // Backend mode: call generate endpoint with instruction to revise
+  await generateScript(`Revise the EXISTING script (keep story). Apply these comments:\n${commentText}\n\nExisting script:\n${scriptText}`);
+}
+
+function saveVersion(){
+  const s = scriptArea.innerText.trim();
+  if(!s){ showToast("ยังไม่มีสคริปต์"); return; }
+  const label = prompt("ตั้งชื่อเวอร์ชัน:", "Manual save");
+  if(label===null) return;
+  pushHistory(label.trim() || "Manual save", scriptArea.innerText, reviewBox.innerText);
+  showToast("Version saved");
+}
+
+function resetAll(){
+  if(!confirm("ล้างฟอร์ม + สคริปต์ + รีวิว? (history/comments ยังอยู่)")) return;
+  brand.value=""; concept.value=""; audience.value=""; cta.value=""; notes.value="";
+  scriptArea.innerText = defaultTemplate();
+  reviewBox.innerText = "ยังไม่มีรีวิว กด “Cross-Check with Client Eyes” ได้เลย";
+  setStatus("ok","Reset");
+  saveState();
+}
+
+btnGenerate.addEventListener("click", ()=> generateScript());
+btnClientEyes.addEventListener("click", reviewClientEyes);
+
+btnLooksGood.addEventListener("click", ()=>{
+  const s = scriptArea.innerText.trim();
+  if(!s){ showToast("ไม่มีสคริปต์"); return; }
+  pushHistory("Approved (Looks Good)", scriptArea.innerText, reviewBox.innerText);
+  setStatus("ok","Approved");
+  showToast("Saved as approved");
+  saveState();
+});
+
+btnEditAgain.addEventListener("click", ()=>{
+  showToast("แก้ต่อได้เลย (โลกยังไม่แตก)");
+  scriptArea.focus();
+});
+
+btnCopySelection.addEventListener("click", async ()=>{
+  const selected = getSelectionTextInEditor().trim();
+  if(!selected){ showToast("เลือกข้อความก่อน"); return; }
+  try{ await copyToClipboard(selected); showToast("Copied selection"); }
+  catch{ showToast("Copy failed"); }
+});
+
+btnCopyAll.addEventListener("click", async ()=>{
+  const text = scriptArea.innerText.trim();
+  if(!text){ showToast("ไม่มีอะไรให้ก็อป"); return; }
+  try{ await copyToClipboard(text); showToast("Copied all"); }
+  catch{ showToast("Copy failed"); }
+});
+
+btnDownloadTxt.addEventListener("click", ()=>{
+  const text = scriptArea.innerText.trim();
+  if(!text){ showToast("ไม่มีอะไรให้ดาวน์โหลด"); return; }
+  const file = `TVC_${(brand.value||"brand").replaceAll(" ","_")}_${duration.value}_${tone.value}.txt`;
+  downloadTxt(file, text);
+  showToast("Downloading .txt");
+});
+
+btnShareLink.addEventListener("click", async ()=>{
+  const url = makeShareLink();
+  try{ await copyToClipboard(url); showToast("Share link copied"); }
+  catch{ prompt("Copy share link:", url); }
+});
+
+btnAddComment.addEventListener("click", addInlineComment);
+btnApplyRegenerate.addEventListener("click", applyChangesAndRegenerate);
+btnSaveVersion.addEventListener("click", saveVersion);
+btnReset.addEventListener("click", resetAll);
+
+btnClearHistory.addEventListener("click", ()=>{
+  if(!confirm("ล้าง history ทั้งหมด?")) return;
+  localStorage.removeItem(LS_KEY_HISTORY);
+  renderHistory();
+  showToast("History cleared");
+});
+btnClearComments.addEventListener("click", ()=>{
+  if(!confirm("ล้าง comments ทั้งหมด?")) return;
+  localStorage.removeItem(LS_KEY_COMMENTS);
+  renderComments();
+  showToast("Comments cleared");
+});
+
+historyList.addEventListener("click", (e)=>{
+  const btn = e.target.closest("button"); if(!btn) return;
+  const act = btn.dataset.act, id = btn.dataset.id;
+  const list = loadHistory();
+  const item = list.find(x=>x.id===id);
+  if(act==="load" && item){
+    if(scriptArea.innerText.trim()){
+      pushHistory("Auto-save before load", scriptArea.innerText, reviewBox.innerText);
+    }
+    scriptArea.innerText = item.script || "";
+    reviewBox.innerText = item.review || "ยังไม่มีรีวิว กด “Cross-Check with Client Eyes” ได้เลย";
+    setStatus("ok","Loaded version");
+    saveState();
+    showToast("Version loaded");
+  }
+  if(act==="del"){
+    saveHistory(list.filter(x=>x.id!==id));
+    showToast("Deleted");
+  }
+});
+
+commentList.addEventListener("click", (e)=>{
+  const btn = e.target.closest("button"); if(!btn) return;
+  if(btn.dataset.act!=="cDel") return;
+  const id = btn.dataset.id;
+  saveComments(loadComments().filter(x=>x.id!==id));
+  showToast("Comment deleted");
+});
+
+// autosave
+[platform,brand,concept,tone,duration,audience,cta,notes,useMock,epGenerate,epReview].forEach(el=>{
+  el.addEventListener("input", saveState);
+  el.addEventListener("change", saveState);
+});
+scriptArea.addEventListener("input", saveState);
+
+(function init(){
+  const loadedShare = loadShareFromHash();
+  if(!loadedShare) loadState();
+  if(!scriptArea.innerText.trim()) scriptArea.innerText = defaultTemplate();
+  renderHistory(); renderComments();
+  setStatus("ok","Ready");
+})();
+</script>
+</body>
+</html>
